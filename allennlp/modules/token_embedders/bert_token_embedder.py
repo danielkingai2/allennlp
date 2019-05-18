@@ -88,7 +88,7 @@ class BertEmbedder(TokenEmbedder):
 
         # input_ids may have extra dimensions, so we reshape down to 2-d
         # before calling the BERT model and then reshape back at the end.
-        all_encoder_layers, _ = self.bert_model(input_ids=util.combine_initial_dims(input_ids),
+        all_encoder_layers, _, attn_data = self.bert_model(input_ids=util.combine_initial_dims(input_ids),
                                                 token_type_ids=util.combine_initial_dims(token_type_ids),
                                                 attention_mask=util.combine_initial_dims(input_mask))
         if self._scalar_mix is not None:
@@ -100,7 +100,7 @@ class BertEmbedder(TokenEmbedder):
 
         if offsets is None:
             # Resize to (batch_size, d1, ..., dn, sequence_length, embedding_dim)
-            return util.uncombine_initial_dims(mix, input_ids.size())
+            return util.uncombine_initial_dims(mix, input_ids.size()), attn_data
         else:
             # offsets is (batch_size, d1, ..., dn, orig_sequence_length)
             offsets2d = util.combine_initial_dims(offsets)
@@ -110,7 +110,7 @@ class BertEmbedder(TokenEmbedder):
             # selected embeddings is also (batch_size * d1 * ... * dn, orig_sequence_length)
             selected_embeddings = mix[range_vector, offsets2d]
 
-            return util.uncombine_initial_dims(selected_embeddings, offsets.size())
+            return util.uncombine_initial_dims(selected_embeddings, offsets.size()), attn_data
 
 
 @TokenEmbedder.register("bert-pretrained")

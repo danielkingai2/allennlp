@@ -107,13 +107,13 @@ class BasicTextFieldEmbedder(TextFieldEmbedder):
                     # If `indexer_key` is None, we map it to `None`.
                     tensors = [(text_field_input[indexer_key] if indexer_key is not None else None)
                                for indexer_key in indexer_map]
-                    token_vectors = embedder(*tensors)
+                    token_vectors, attn_data = embedder(*tensors)
                 elif isinstance(indexer_map, dict):
                     tensors = {
                             name: text_field_input[argument]
                             for name, argument in indexer_map.items()
                     }
-                    token_vectors = embedder(**tensors)
+                    token_vectors, attn_data = embedder(**tensors)
                 else:
                     raise NotImplementedError
             else:
@@ -122,7 +122,7 @@ class BasicTextFieldEmbedder(TextFieldEmbedder):
                 tensors = [text_field_input[key]]
                 token_vectors = embedder(*tensors)
             embedded_representations.append(token_vectors)
-        return torch.cat(embedded_representations, dim=-1)
+        return torch.cat(embedded_representations, dim=-1), attn_data
 
     # This is some unusual logic, it needs a custom from_params.
     @classmethod
